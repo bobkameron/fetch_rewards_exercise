@@ -68,11 +68,9 @@ transaction should be recorded.
 The string company_name should have at least one non whitespace character. Any leading or trailing
 whitespace is stripped when the transaction is recorded, so "Dannon" is the same as " Dannon   ". However, this API is case-sensitive, so recording a transaction for the payer "DANNON" is different from one added for "dannon". 
 
-Additionally, only non-zero points are allowed to be recorded in a transaction. The sum of all the previous
-transactions associated with the payer + points must not be less than zero (no payer's points can go
-negative).
+Only non-zero points are allowed to be recorded in a transaction (value mapped to points can be negative or positive but not 0). Also, the payer's points must never go negative; the sum of all the previous transactions associated with the payer - points spent from payer's account + current transaction cannot be less than 0. 
 
-Any valid HTTP JSON PUT request following the above specification will successfully add the transaction by adding the number of points specified at a timestamp associated with the payer, and return an HTTP response with status code 201. Otherwise, an HTTP response with error status code 4xx is returned indicating the failure to add the transaction. 
+Any valid HTTP JSON PUT request following the above specification will successfully add the transaction by adding the number of points specified at a timestamp associated with the payer, and return an HTTP response with status code 201. Otherwise, an HTTP response with error status code 4xx is returned indicating failure to add the transaction. 
 
 
 points/ DELETE
@@ -91,7 +89,7 @@ If the HTTP DELETE request follows the above specifications, then the points are
     ...
 ]
 
-Which simply indicates the net change in the number of points associated with each payer for any payer that had a transaction that was spent in full or partially. 
+which simply indicates the net change in the number of points associated with each payer for any payer that had a transaction that was spent in full or partially. 
 
 An invalid HTTP DELETE request returns an HTTP response with status code 4xx indicating failure to spend any points. 
 

@@ -19,6 +19,12 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import Payer, Transaction 
 
 def get_payer_points_sum(payer = None):
+    '''
+    Input: payer must be a string or None 
+
+    Returns the nonnegative sum of the unspent points associated with payer. If payer is None,
+    then returns the sum of all unspent points for all payers. 
+    '''
     if payer is None:
         transactions = Transaction.objects.all()
     else:
@@ -33,6 +39,13 @@ def get_payer_points_sum(payer = None):
 
 
 def add_transaction(data):
+    '''
+    Input: data must be a dict
+
+    Returns a JsonResponse of status code 2xx indicating successful creation of a new transaction,
+    or JsonResponse of status code 4xx indicating failure to create a new transaction as the request
+    was invalid.
+    '''
 
     try:
         payer_name , points, timestamp  = data['payer'].strip(), \
@@ -74,6 +87,15 @@ def add_transaction(data):
 
 
 def spend_points(data):
+    '''
+    Input: data must be a dict
+
+    Returns a JsonResponse of status code 2xx for successfully spending a nonnegative number of points,
+    or a JsonResponse of status code 4xx for failure to spend points (invalid request).
+
+    For a successful request, a JSON array is sent back to the client in the body of the http response
+    with information about how many points were spent from each payer that had a transaction that was spent. 
+    '''
 
     try:
         spend_amount = int(data['points'])
@@ -97,6 +119,10 @@ def spend_points(data):
     result = {}
 
     for transaction in transactions:
+        '''
+        Loop through all transactions, spending each of them and deleting the oldest one until
+        the amount left to spend is 0. 
+        '''
         if spend_amount == 0:
             break 
         points = transaction.points 
@@ -129,6 +155,11 @@ def spend_points(data):
     
 
 def get_balance():
+    '''
+    Returns a JSONResponse indicating the balance associated with all payers. 
+    The balance of each payer is nonnegative and could be 0.
+    
+    '''
 
     payers = Payer.objects.all()
     result = dict() 
@@ -140,15 +171,18 @@ def get_balance():
 
 @csrf_exempt
 def index ( request):
+    '''
+    See the README for details on the specification. 
+    The README has detailed specifications for the expected input/output of every valid request.
+    '''
     method = request.method 
 
     if method == "PUT" or method == "DELETE":
-        print(request.body)
-        print (request.content_type)
         
         try:
             data = json.loads(request.body)
         except json.JSONDecodeError:
+            # Any PUT/DELETE request must have its body be a single JSON string. 
             return JsonResponse( {"error": "Request must be in JSON format"}, status = 400)
 
         if method == "PUT":
